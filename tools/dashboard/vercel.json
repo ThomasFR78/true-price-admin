@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/checks/:id", "destination": "/api/checks/[id]" },
+    { "source": "/api/vendors/:id", "destination": "/api/vendors/[id]" }
+  ]
+}

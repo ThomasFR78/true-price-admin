@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>True Price Authority - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-header { background: linear-gradient(135deg, #059669 0%, #065f46 100%); }
+        .trophy-gold { color: #FFD700; }
+        .trophy-silver { color: #C0C0C0; }
+        .trophy-bronze { color: #CD7F32; }
+        .scam-alert { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const API_BASE = '/api';
+
+        function App() {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [view, setView] = useState('barometre');
+
+            useEffect(() => {
+                loadData();
+            }, []);
+
+            const loadData = async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/audit/summary`);
+                    const json = await res.json();
+                    setData(json);
+                } catch (err) {
+                    setData(getDemoData());
+                }
+                setLoading(false);
+            };
+
+            if (loading) {
+                return (
+                    <div className="flex items-center justify-center min-h-screen">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen">
+                    {/* Header */}
+                    <header className="gradient-header border-b border-emerald-700">
+                        <div className="max-w-7xl mx-auto px-6 py-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                                        ✓ True Price Authority
+                                    </h1>
+                                    <p className="text-emerald-200 text-sm">La source de vérité sur les prix</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="text-right">
+                                        <div className="text-xs text-emerald-200">Taux de Mensonge Global</div>
+                                        <div className={`text-2xl font-bold ${
+                                            parseFloat(data?.metrics?.lie_rate) > 30 ? 'text-red-400' :
+                                            parseFloat(data?.metrics?.lie_rate) > 15 ? 'text-yellow-400' : 'text-emerald-400'
+                                        }`}>
+                                            {data?.metrics?.lie_rate || 0}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Navigation */}
+                    <nav className="bg-gray-800 border-b border-gray-700">
+                        <div className="max-w-7xl mx-auto px-6">
+                            <div className="flex space-x-1 overflow-x-auto">
+                                {[
+                                    { id: 'barometre', icon: '📊', label: 'Baromètre' },
+                                    { id: 'leaderboard', icon: '🏆', label: 'Leaderboard' },
+                                    { id: 'vendors', icon: '🏪', label: 'Intégrité Vendeurs' },
+                                    { id: 'checks', icon: '🔍', label: 'Checks' },
+                                    { id: 'coupons', icon: '🎟️', label: 'Coupons' }
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setView(tab.id)}
+                                        className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
+                                            view === tab.id
+                                                ? 'text-emerald-400 border-b-2 border-emerald-400'
+                                                : 'text-gray-400 hover:text-white'
+                                        }`}
+                                    >
+                                        {tab.icon} {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Content */}
+                    <main className="max-w-7xl mx-auto px-6 py-8">
+                        {view === 'barometre' && <BarometreView data={data} />}
+                        {view === 'leaderboard' && <LeaderboardView data={data} />}
+                        {view === 'vendors' && <VendorIntegrityView data={data} />}
+                        {view === 'checks' && <ChecksView data={data} />}
+                        {view === 'coupons' && <CouponsView data={data} />}
+                    </main>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // BAROMÈTRE DES MENTEURS
+        // ═══════════════════════════════════════════════════════════
+        function BarometreView({ data }) {
+            const m = data?.metrics || {};
+
+            return (
+                <div className="space-y-8">
+                    {/* Baromètre principal */}
+                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700">
+                        <h2 className="text-2xl font-bold text-center mb-6">🎯 Baromètre des Menteurs</h2>
+                        <p className="text-center text-gray-400 mb-8">Qui ment sur les prix ? Notre audit révèle tout.</p>
+
+                        {/* Gauge visuelle */}
+                        <div className="relative w-64 h-32 mx-auto mb-8">
+                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-yellow-500 to-red-500 rounded-t-full opacity-20"></div>
+                            <div className="absolute bottom-0 left-1/2 w-2 h-24 bg-white origin-bottom transform -translate-x-1/2"
+                                 style={{ transform: `translateX(-50%) rotate(${(parseFloat(m.lie_rate) / 100) * 180 - 90}deg)` }}>
+                                <div className="w-4 h-4 bg-white rounded-full -ml-1 -mt-1"></div>
+                            </div>
+                            <div className="absolute bottom-0 left-0 text-xs text-emerald-400">0%</div>
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-xs text-yellow-400">50%</div>
+                            <div className="absolute bottom-0 right-0 text-xs text-red-400">100%</div>
+                        </div>
+
+                        <div className="text-center">
+                            <div className={`text-5xl font-extrabold ${
+                                parseFloat(m.lie_rate) > 30 ? 'text-red-400' :
+                                parseFloat(m.lie_rate) > 15 ? 'text-yellow-400' : 'text-emerald-400'
+                            }`}>
+                                {m.lie_rate}%
+                            </div>
+                            <div className="text-gray-400 mt-2">
+                                {parseFloat(m.lie_rate) > 30 ? '⚠️ Niveau critique de mensonge' :
+                                 parseFloat(m.lie_rate) > 15 ? '⚡ Vigilance requise' : '✅ Niveau acceptable'}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Métriques détaillées */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <MetricCard title="Total Checks" value={m.total_checks} icon="🔍" color="blue" />
+                        <MetricCard title="Écarts détectés" value={m.checks_with_gap} icon="⚠️" color="yellow" />
+                        <MetricCard title="Écart moyen" value={`€${m.avg_gap_ggdeals || 0}`} icon="💰" color="red" />
+                        <MetricCard title="Vendeurs audités" value={m.vendors_audited} icon="🏪" color="emerald" />
+                    </div>
+
+                    {/* Top menteurs de la semaine */}
+                    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            🚨 Top Menteurs de la Semaine
+                        </h3>
+                        <div className="space-y-3">
+                            {data?.vendor_scores?.filter(v => parseFloat(v.avg_gap) < -0.5)
+                                .sort((a, b) => parseFloat(a.avg_gap) - parseFloat(b.avg_gap))
+                                .slice(0, 3)
+                                .map((vendor, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 bg-red-900/20 rounded-lg border border-red-800">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl scam-alert">🚩</span>
+                                        <div>
+                                            <p className="font-semibold">{vendor.vendor}</p>
+                                            <p className="text-sm text-gray-400">GG.deals sous-estime de {Math.abs(vendor.avg_gap)}€ en moyenne</p>
+                                        </div>
+                                    </div>
+                                    <span className="px-3 py-1 bg-red-600 rounded-full text-sm font-medium">
+                                        SCAM ALERT
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // LEADERBOARD AVEC TROPHÉES
+        // ═══════════════════════════════════════════════════════════
+        function LeaderboardView({ data }) {
+            const sorted = [...(data?.vendor_scores || [])].sort((a, b) =>
+                parseFloat(b.reliability) - parseFloat(a.reliability)
+            );
+
+            const getTrophy = (index) => {
+                if (index === 0) return { icon: '🥇', class: 'trophy-gold', label: 'MOST HONEST' };
+                if (index === 1) return { icon: '🥈', class: 'trophy-silver', label: '' };
+                if (index === 2) return { icon: '🥉', class: 'trophy-bronze', label: '' };
+                return { icon: '', class: '', label: '' };
+            };
+
+            const worstVendor = [...(data?.vendor_scores || [])]
+                .sort((a, b) => parseFloat(a.reliability) - parseFloat(b.reliability))[0];
+
+            return (
+                <div className="space-y-8">
+                    {/* Podium */}
+                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700">
+                        <h2 className="text-2xl font-bold text-center mb-8">🏆 Leaderboard - Fiabilité GG.deals</h2>
+
+                        {/* Podium visuel */}
+                        <div className="flex justify-center items-end gap-4 mb-8">
+                            {/* 2ème place */}
+                            {sorted[1] && (
+                                <div className="text-center">
+                                    <div className="text-4xl mb-2">🥈</div>
+                                    <div className="bg-gray-600 w-24 h-20 rounded-t-lg flex items-center justify-center">
+                                        <span className="font-bold">{sorted[1].reliability}%</span>
+                                    </div>
+                                    <p className="text-sm mt-2 font-medium">{sorted[1].vendor}</p>
+                                </div>
+                            )}
+                            {/* 1ère place */}
+                            {sorted[0] && (
+                                <div className="text-center">
+                                    <div className="text-5xl mb-2">🥇</div>
+                                    <div className="bg-yellow-600 w-28 h-28 rounded-t-lg flex flex-col items-center justify-center">
+                                        <span className="font-bold text-xl">{sorted[0].reliability}%</span>
+                                        <span className="text-xs bg-yellow-500 px-2 py-0.5 rounded mt-1">MOST HONEST</span>
+                                    </div>
+                                    <p className="text-sm mt-2 font-bold">{sorted[0].vendor}</p>
+                                </div>
+                            )}
+                            {/* 3ème place */}
+                            {sorted[2] && (
+                                <div className="text-center">
+                                    <div className="text-4xl mb-2">🥉</div>
+                                    <div className="bg-amber-700 w-24 h-16 rounded-t-lg flex items-center justify-center">
+                                        <span className="font-bold">{sorted[2].reliability}%</span>
+                                    </div>
+                                    <p className="text-sm mt-2 font-medium">{sorted[2].vendor}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Classement complet */}
+                    <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                        <div className="p-4 border-b border-gray-700">
+                            <h3 className="font-semibold">📋 Classement Complet</h3>
+                        </div>
+                        <table className="w-full">
+                            <thead className="bg-gray-700/50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Rang</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Vendeur</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Trophée</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Fiabilité</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Checks</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-700">
+                                {sorted.map((vendor, i) => {
+                                    const trophy = getTrophy(i);
+                                    const isWorst = vendor.vendor === worstVendor?.vendor && parseFloat(vendor.reliability) < 70;
+                                    return (
+                                        <tr key={i} className={`hover:bg-gray-700/50 ${isWorst ? 'bg-red-900/20' : ''}`}>
+                                            <td className="px-6 py-4 font-medium">#{i + 1}</td>
+                                            <td className="px-6 py-4 font-medium">{vendor.vendor}</td>
+                                            <td className="px-6 py-4">
+                                                {trophy.icon && (
+                                                    <span className={`text-2xl ${trophy.class}`}>{trophy.icon}</span>
+                                                )}
+                                                {trophy.label && (
+                                                    <span className="ml-2 text-xs bg-yellow-600 px-2 py-0.5 rounded">
+                                                        {trophy.label}
+                                                    </span>
+                                                )}
+                                                {isWorst && (
+                                                    <span className="text-xs bg-red-600 px-2 py-0.5 rounded ml-2">
+                                                        🚨 SCAM ALERT
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-20 bg-gray-600 rounded-full h-2">
+                                                        <div
+                                                            className={`h-2 rounded-full ${
+                                                                parseInt(vendor.reliability) > 80 ? 'bg-emerald-500' :
+                                                                parseInt(vendor.reliability) > 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                                            }`}
+                                                            style={{ width: `${vendor.reliability}%` }}
+                                                        ></div>
+                                                    </div>
+                                                    <span className="text-sm font-medium">{vendor.reliability}%</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-400">{vendor.checks}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // INTÉGRITÉ VENDEURS (Fake Promos, Frais Cachés)
+        // ═══════════════════════════════════════════════════════════
+        function VendorIntegrityView({ data }) {
+            return (
+                <div className="space-y-8">
+                    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <h2 className="text-xl font-bold mb-4">🕵️ Audit d'Intégrité Vendeurs</h2>
+                        <p className="text-gray-400 mb-6">Détection des pratiques douteuses: fausses promos, frais cachés, prix gonflés.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+                                <div className="text-3xl mb-2">🏷️</div>
+                                <h4 className="font-semibold">Fake Promos</h4>
+                                <p className="text-sm text-gray-400">Prix barrés gonflés</p>
+                                <p className="text-2xl font-bold text-yellow-400 mt-2">{data?.integrity?.fake_promos || 12}%</p>
+                            </div>
+                            <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+                                <div className="text-3xl mb-2">💳</div>
+                                <h4 className="font-semibold">Frais Cachés</h4>
+                                <p className="text-sm text-gray-400">Protection acheteur forcée</p>
+                                <p className="text-2xl font-bold text-red-400 mt-2">{data?.integrity?.hidden_fees || 23}%</p>
+                            </div>
+                            <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+                                <div className="text-3xl mb-2">✅</div>
+                                <h4 className="font-semibold">Prix Honnêtes</h4>
+                                <p className="text-sm text-gray-400">Transparent du début à la fin</p>
+                                <p className="text-2xl font-bold text-emerald-400 mt-2">{data?.integrity?.honest || 65}%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Détail par vendeur */}
+                    <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                        <div className="p-4 border-b border-gray-700">
+                            <h3 className="font-semibold">📊 Détail par Vendeur</h3>
+                        </div>
+                        <div className="divide-y divide-gray-700">
+                            {(data?.vendor_scores || []).map((vendor, i) => (
+                                <div key={i} className="p-4 flex items-center justify-between">
+                                    <div>
+                                        <h4 className="font-medium">{vendor.vendor}</h4>
+                                        <p className="text-sm text-gray-400">{vendor.checks} checks effectués</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {parseFloat(vendor.avg_gap) < -1 && (
+                                            <span className="px-2 py-1 bg-red-600/20 text-red-400 rounded text-xs">
+                                                🚩 Frais cachés suspectés
+                                            </span>
+                                        )}
+                                        {parseFloat(vendor.reliability) < 70 && (
+                                            <span className="px-2 py-1 bg-yellow-600/20 text-yellow-400 rounded text-xs">
+                                                ⚠️ Fake promos fréquentes
+                                            </span>
+                                        )}
+                                        {parseFloat(vendor.reliability) > 85 && (
+                                            <span className="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded text-xs">
+                                                ✅ Vendeur fiable
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // CHECKS VIEW
+        // ═══════════════════════════════════════════════════════════
+        function ChecksView({ data }) {
+            return (
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold">🔍 Derniers Price Checks</h2>
+                        <span className="text-sm text-gray-400">{data?.recent_checks?.length || 0} checks récents</span>
+                    </div>
+                    {(data?.recent_checks || []).map((check, i) => (
+                        <div key={i} className="bg-gray-800 rounded-lg p-4 border border-gray-700 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                {check.screenshot && (
+                                    <div className="w-16 h-12 bg-gray-700 rounded overflow-hidden">
+                                        <img src={check.screenshot} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+                                <div>
+                                    <h3 className="font-medium">{check.product}</h3>
+                                    <p className="text-sm text-gray-400">{check.vendor} • {new Date(check.date).toLocaleDateString('fr-FR')}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className="flex items-center gap-4">
+                                    <div>
+                                        <div className="text-xs text-gray-500">Réel</div>
+                                        <div className="font-medium">{check.price_real}€</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500">GG.deals</div>
+                                        <div className="font-medium">{check.price_ggdeals}€</div>
+                                    </div>
+                                    <div className={`px-3 py-1 rounded-lg ${
+                                        parseFloat(check.gap) > 0 ? 'bg-emerald-900/50 text-emerald-400' : 'bg-red-900/50 text-red-400'
+                                    }`}>
+                                        {parseFloat(check.gap) > 0 ? '+' : ''}{check.gap}€
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // COUPONS VIEW
+        // ═══════════════════════════════════════════════════════════
+        function CouponsView({ data }) {
+            const coupons = data?.coupons || [
+                { code: 'AKS10', source: 'AllKeyShop', valid: true, discount: '10%', tested: '2026-01-29' },
+                { code: 'GGDEALS5', source: 'GG.deals', valid: false, discount: '5%', tested: '2026-01-28' },
+                { code: 'ENEBA3', source: 'Eneba', valid: true, discount: '3€', tested: '2026-01-27' }
+            ];
+
+            return (
+                <div className="space-y-6">
+                    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <h2 className="text-xl font-bold mb-4">🎟️ Crash-Test Coupons</h2>
+                        <p className="text-gray-400 mb-6">Test de validité des codes promo affichés sur les comparateurs.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div className="bg-emerald-900/30 rounded-lg p-4 text-center border border-emerald-700">
+                                <div className="text-3xl font-bold text-emerald-400">{coupons.filter(c => c.valid).length}</div>
+                                <div className="text-sm text-gray-400">Coupons valides</div>
+                            </div>
+                            <div className="bg-red-900/30 rounded-lg p-4 text-center border border-red-700">
+                                <div className="text-3xl font-bold text-red-400">{coupons.filter(c => !c.valid).length}</div>
+                                <div className="text-sm text-gray-400">Coupons expirés/faux</div>
+                            </div>
+                            <div className="bg-blue-900/30 rounded-lg p-4 text-center border border-blue-700">
+                                <div className="text-3xl font-bold text-blue-400">{coupons.length}</div>
+                                <div className="text-sm text-gray-400">Total testés</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                        <table className="w-full">
+                            <thead className="bg-gray-700/50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Code</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Source</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Réduction</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Statut</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium">Testé le</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-700">
+                                {coupons.map((coupon, i) => (
+                                    <tr key={i} className="hover:bg-gray-700/50">
+                                        <td className="px-6 py-4 font-mono font-medium">{coupon.code}</td>
+                                        <td className="px-6 py-4 text-gray-400">{coupon.source}</td>
+                                        <td className="px-6 py-4">{coupon.discount}</td>
+                                        <td className="px-6 py-4">
+                                            {coupon.valid ? (
+                                                <span className="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded text-sm">✅ Valide</span>
+                                            ) : (
+                                                <span className="px-2 py-1 bg-red-600/20 text-red-400 rounded text-sm">❌ Invalide</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-400">{coupon.tested}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // COMPOSANTS UTILITAIRES
+        // ═══════════════════════════════════════════════════════════
+        function MetricCard({ title, value, icon, color }) {
+            const colors = {
+                emerald: 'from-emerald-600 to-emerald-800',
+                yellow: 'from-yellow-600 to-yellow-800',
+                blue: 'from-blue-600 to-blue-800',
+                red: 'from-red-600 to-red-800'
+            };
+            return (
+                <div className={`bg-gradient-to-br ${colors[color]} rounded-xl p-4`}>
+                    <div className="flex items-center justify-between">
+                        <span className="text-2xl">{icon}</span>
+                        <span className="text-2xl font-bold">{value || 0}</span>
+                    </div>
+                    <p className="text-sm text-white/80 mt-2">{title}</p>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // DONNÉES DÉMO
+        // ═══════════════════════════════════════════════════════════
+        function getDemoData() {
+            return {
+                generated_at: new Date().toISOString(),
+                metrics: {
+                    total_checks: 156,
+                    checks_with_gap: 42,
+                    avg_gap_ggdeals: '0.85',
+                    avg_gap_percent: '2.3',
+                    vendors_audited: 6,
+                    accuracy_score: '73.1',
+                    lie_rate: '26.9'
+                },
+                integrity: {
+                    fake_promos: 12,
+                    hidden_fees: 23,
+                    honest: 65
+                },
+                vendor_scores: [
+                    { vendor: 'CDKeys', checks: 22, avg_gap: '0.15', reliability: '95' },
+                    { vendor: 'Steam', checks: 8, avg_gap: '0.00', reliability: '100' },
+                    { vendor: 'Eneba', checks: 45, avg_gap: '0.89', reliability: '85' },
+                    { vendor: 'Kinguin', checks: 28, avg_gap: '0.45', reliability: '78' },
+                    { vendor: 'G2A', checks: 38, avg_gap: '-0.95', reliability: '68' },
+                    { vendor: 'Instant Gaming', checks: 15, avg_gap: '-1.50', reliability: '58' }
+                ],
+                recent_checks: [
+                    { product: 'GTA VI Pre-order', vendor: 'Eneba', date: new Date().toISOString(), price_real: 59.99, price_ggdeals: 61.50, gap: '1.51' },
+                    { product: 'EA Sports FC 26', vendor: 'G2A', date: new Date().toISOString(), price_real: 45.99, price_ggdeals: 44.99, gap: '-1.00' },
+                    { product: 'Elden Ring DLC', vendor: 'CDKeys', date: new Date().toISOString(), price_real: 34.99, price_ggdeals: 35.20, gap: '0.21' },
+                    { product: 'Cyberpunk 2077', vendor: 'Kinguin', date: new Date().toISOString(), price_real: 29.99, price_ggdeals: 30.50, gap: '0.51' },
+                    { product: 'Baldurs Gate 3', vendor: 'Instant Gaming', date: new Date().toISOString(), price_real: 52.99, price_ggdeals: 51.00, gap: '-1.99' }
+                ]
+            };
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "true-price-authority-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard True Price Authority - Audit des prix GG.deals vs réalité",
+  "scripts": {
+    "dev": "vercel dev",
+    "seed": "node scripts/seed-price-checks.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.91.1"
+  }
+}
