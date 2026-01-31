@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>True Price Authority - Le baromètre de confiance des revendeurs de clés</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00b67a',
+                        secondary: '#1a1a2e',
+                        accent: '#ff6b35',
+                        danger: '#dc2626',
+                        warning: '#f59e0b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-hero { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+        .trust-ring {
+            background: conic-gradient(#00b67a var(--percent), #e5e7eb var(--percent));
+            border-radius: 50%;
+        }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+        .badge-honest { background: linear-gradient(135deg, #00b67a, #059669); }
+        .badge-reliable { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .badge-correct { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .badge-warning { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .lie-meter { background: linear-gradient(90deg, #00b67a 0%, #84cc16 25%, #facc15 50%, #f97316 75%, #ef4444 100%); }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+    <div id="root"></div>
+    <script type="text/babel">
+const { useState, useEffect } = React;
+
+// ===== DONNÉES RÉALISTES =====
+const vendorData = [
+    { id: 1, name: 'Steam', logo: '🎮', score: 100, checks: 892, avgDiff: 0.00, badge: 'RÉFÉRENCE', trend: 'stable', since: '2024' },
+    { id: 2, name: 'CDKeys', logo: '🔑', score: 94, checks: 567, avgDiff: 0.18, badge: 'TRÈS FIABLE', trend: 'up', since: '2024' },
+    { id: 3, name: 'Instant Gaming', logo: '⚡', score: 87, checks: 723, avgDiff: 0.52, badge: 'FIABLE', trend: 'stable', since: '2024' },
+    { id: 4, name: 'Gamesplanet', logo: '🌍', score: 91, checks: 234, avgDiff: 0.31, badge: 'TRÈS FIABLE', trend: 'up', since: '2025' },
+    { id: 5, name: 'Fanatical', logo: '🎯', score: 89, checks: 312, avgDiff: 0.42, badge: 'FIABLE', trend: 'stable', since: '2024' },
+    { id: 6, name: 'Eneba', logo: '🛒', score: 71, checks: 1243, avgDiff: 1.85, badge: 'VARIABLE', trend: 'down', since: '2024' },
+    { id: 7, name: 'G2A', logo: '🏪', score: 58, checks: 1567, avgDiff: 2.74, badge: 'ATTENTION', trend: 'down', since: '2024' },
+    { id: 8, name: 'Kinguin', logo: '👑', score: 42, checks: 876, avgDiff: 4.12, badge: 'RISQUÉ', trend: 'down', since: '2024' },
+];
+
+const badOffers = [
+    { id: 1, game: 'GTA VI Pre-order', vendor: 'Kinguin', advertised: '45.99€', actual: '67.50€', diff: '+47%', date: '28 Jan 2026', type: 'bait-switch', status: 'confirmed' },
+    { id: 2, game: 'EA Sports FC 26', vendor: 'G2A', advertised: '52.00€', actual: '61.85€', diff: '+19%', date: '27 Jan 2026', type: 'hidden-fees', status: 'confirmed' },
+    { id: 3, game: 'Call of Duty MW3', vendor: 'Eneba', advertised: '48.99€', actual: '56.20€', diff: '+15%', date: '26 Jan 2026', type: 'currency-trick', status: 'confirmed' },
+    { id: 4, game: 'Cyberpunk 2077 Ultimate', vendor: 'Kinguin', advertised: '29.99€', actual: '42.00€', diff: '+40%', date: '25 Jan 2026', type: 'bait-switch', status: 'confirmed' },
+    { id: 5, game: 'Elden Ring', vendor: 'G2A', advertised: '35.00€', actual: '43.50€', diff: '+24%', date: '24 Jan 2026', type: 'hidden-fees', status: 'confirmed' },
+    { id: 6, game: 'Hogwarts Legacy', vendor: 'Eneba', advertised: '32.50€', actual: '38.90€', diff: '+20%', date: '23 Jan 2026', type: 'service-fee', status: 'confirmed' },
+];
+
+const badCoupons = [
+    { id: 1, code: 'SAVE20', vendor: 'Kinguin', promise: '-20%', reality: '-3% après frais', game: 'Tous les jeux', date: '29 Jan 2026', status: 'misleading' },
+    { id: 2, code: 'WINTER25', vendor: 'G2A', promise: '-25%', reality: 'Invalide sur 80% des jeux', game: 'Sélection limitée', date: '28 Jan 2026', status: 'restricted' },
+    { id: 3, code: 'NEWUSER15', vendor: 'Eneba', promise: '-15%', reality: '-15% mais frais +12%', game: 'Premier achat', date: '27 Jan 2026', status: 'misleading' },
+    { id: 4, code: 'VIP10', vendor: 'Kinguin', promise: '-10% VIP', reality: 'Nécessite abonnement 5€/mois', game: 'Tous', date: '26 Jan 2026', status: 'hidden-cost' },
+];
+
+const stats = {
+    totalChecks: 6414,
+    vendorsAudited: 8,
+    avgLieRate: 26.9,
+    badOffersExposed: 847,
+    badCouponsExposed: 156,
+    lastUpdate: '30 Jan 2026, 14:32',
+    startedSince: 'Novembre 2024'
+};
+
+// ===== COMPOSANTS =====
+function App() {
+    const [currentPage, setCurrentPage] = useState('home');
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+            <main>
+                {currentPage === 'home' && <HomePage setCurrentPage={setCurrentPage} />}
+                {currentPage === 'rankings' && <RankingsPage />}
+                {currentPage === 'bad-offers' && <BadOffersPage />}
+                {currentPage === 'bad-coupons' && <BadCouponsPage />}
+                {currentPage === 'about' && <AboutPage />}
+            </main>
+            <Footer />
+        </div>
+    );
+}
+
+function Navbar({ currentPage, setCurrentPage }) {
+    return (
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                    <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setCurrentPage('home')}>
+                        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                            <span className="text-white font-bold text-xl">T</span>
+                        </div>
+                        <div>
+                            <span className="font-bold text-lg text-gray-900">True Price</span>
+                            <span className="font-light text-lg text-primary ml-1">Authority</span>
+                        </div>
+                    </div>
+
+                    <div className="hidden md:flex items-center space-x-1">
+                        {[
+                            { id: 'home', label: 'Accueil', icon: 'fa-home' },
+                            { id: 'rankings', label: 'Classement', icon: 'fa-trophy' },
+                            { id: 'bad-offers', label: 'Arnaques', icon: 'fa-exclamation-triangle' },
+                            { id: 'bad-coupons', label: 'Faux Coupons', icon: 'fa-ticket' },
+                            { id: 'about', label: 'À propos', icon: 'fa-info-circle' },
+                        ].map(item => (
+                            <button
+                                key={item.id}
+                                onClick={() => setCurrentPage(item.id)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                    currentPage === item.id
+                                        ? 'bg-primary text-white'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                <i className={`fas ${item.icon} mr-2`}></i>
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                        <a href="#" className="text-gray-400 hover:text-gray-600 transition"><i className="fab fa-twitter text-lg"></i></a>
+                        <a href="#" className="text-gray-400 hover:text-gray-600 transition"><i className="fab fa-discord text-lg"></i></a>
+                        <a href="#" className="text-gray-400 hover:text-gray-600 transition"><i className="fab fa-youtube text-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    );
+}
+
+function HomePage({ setCurrentPage }) {
+    return (
+        <>
+            {/* Hero Section */}
+            <section className="gradient-hero py-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+                                <i className="fas fa-shield-alt mr-2"></i>
+                                Indépendant depuis {stats.startedSince}
+                            </div>
+                            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
+                                Arrêtez de vous faire avoir sur les
+                                <span className="text-primary"> prix des clés de jeux</span>
+                            </h1>
+                            <p className="text-xl text-gray-600 mb-8">
+                                True Price Authority vérifie les prix réels des revendeurs de clés.
+                                Nous exposons les frais cachés, les faux coupons et les pratiques trompeuses.
+                            </p>
+                            <div className="flex flex-wrap gap-4">
+                                <button onClick={() => setCurrentPage('rankings')} className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition shadow-lg shadow-primary/30">
+                                    <i className="fas fa-trophy mr-2"></i>
+                                    Voir le classement
+                                </button>
+                                <button onClick={() => setCurrentPage('bad-offers')} className="px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition border border-gray-200">
+                                    <i className="fas fa-search mr-2"></i>
+                                    Offres exposées
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="relative">
+                            {/* Lie Barometer */}
+                            <div className="bg-white rounded-2xl shadow-xl p-8 card-hover">
+                                <div className="text-center mb-6">
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Baromètre du Mensonge</h3>
+                                    <p className="text-sm text-gray-500">Taux moyen d'écart prix affiché vs réel</p>
+                                </div>
+                                <div className="relative w-48 h-48 mx-auto mb-6">
+                                    <div className="trust-ring w-full h-full p-4" style={{'--percent': `${100-stats.avgLieRate}%`}}>
+                                        <div className="w-full h-full bg-white rounded-full flex items-center justify-center flex-col">
+                                            <span className="text-4xl font-bold text-danger">{stats.avgLieRate}%</span>
+                                            <span className="text-sm text-gray-500">de mensonge</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="h-3 lie-meter rounded-full mb-4"></div>
+                                <div className="flex justify-between text-xs text-gray-500">
+                                    <span>Honnête</span>
+                                    <span>Trompeur</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Stats Bar */}
+            <section className="bg-secondary py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-8 text-center">
+                        {[
+                            { value: stats.totalChecks.toLocaleString(), label: 'Prix vérifiés', icon: 'fa-check-circle' },
+                            { value: stats.vendorsAudited, label: 'Vendeurs audités', icon: 'fa-store' },
+                            { value: stats.badOffersExposed, label: 'Arnaques exposées', icon: 'fa-exclamation-triangle' },
+                            { value: stats.badCouponsExposed, label: 'Faux coupons', icon: 'fa-ticket' },
+                            { value: '73.1%', label: 'Taux de fiabilité moyen', icon: 'fa-chart-line' },
+                        ].map((stat, i) => (
+                            <div key={i}>
+                                <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
+                                <div className="text-gray-400 text-sm">
+                                    <i className={`fas ${stat.icon} mr-1`}></i>{stat.label}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Top Vendors Preview */}
+            <section className="py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                            <i className="fas fa-trophy text-primary mr-3"></i>
+                            Classement de Confiance
+                        </h2>
+                        <p className="text-gray-600 max-w-2xl mx-auto">
+                            Basé sur {stats.totalChecks.toLocaleString()} vérifications de prix.
+                            Nous comparons le prix affiché sur les comparateurs avec le prix réel au checkout.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {vendorData.slice(0, 4).map((vendor, i) => (
+                            <VendorCard key={vendor.id} vendor={vendor} rank={i + 1} />
+                        ))}
+                    </div>
+
+                    <div className="text-center mt-8">
+                        <button onClick={() => setCurrentPage('rankings')} className="text-primary font-semibold hover:underline">
+                            Voir le classement complet <i className="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* Recent Bad Offers */}
+            <section className="py-16 bg-gray-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                            <i className="fas fa-exclamation-triangle text-danger mr-3"></i>
+                            Dernières Arnaques Exposées
+                        </h2>
+                        <p className="text-gray-600">Prix trompeurs détectés ces derniers jours</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {badOffers.slice(0, 3).map(offer => (
+                            <BadOfferCard key={offer.id} offer={offer} />
+                        ))}
+                    </div>
+
+                    <div className="text-center mt-8">
+                        <button onClick={() => setCurrentPage('bad-offers')} className="text-danger font-semibold hover:underline">
+                            Voir toutes les arnaques <i className="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* How It Works */}
+            <section className="py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-4">Comment ça marche ?</h2>
+                        <p className="text-gray-600">Notre méthodologie de vérification</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-4 gap-8">
+                        {[
+                            { step: '01', title: 'Collecte', desc: 'Nous relevons les prix affichés sur Allkeyshop et GG.deals', icon: 'fa-search' },
+                            { step: '02', title: 'Vérification', desc: 'Nous allons jusqu\'au checkout sur chaque marchand', icon: 'fa-shopping-cart' },
+                            { step: '03', title: 'Comparaison', desc: 'Nous calculons l\'écart entre prix affiché et prix réel', icon: 'fa-balance-scale' },
+                            { step: '04', title: 'Publication', desc: 'Nous publions les résultats et alertons la communauté', icon: 'fa-bullhorn' },
+                        ].map((item, i) => (
+                            <div key={i} className="text-center">
+                                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <i className={`fas ${item.icon} text-2xl text-primary`}></i>
+                                </div>
+                                <div className="text-xs text-primary font-bold mb-2">ÉTAPE {item.step}</div>
+                                <h3 className="font-semibold text-gray-900 mb-2">{item.title}</h3>
+                                <p className="text-sm text-gray-600">{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA */}
+            <section className="py-16 bg-primary">
+                <div className="max-w-4xl mx-auto px-4 text-center">
+                    <h2 className="text-3xl font-bold text-white mb-4">Rejoignez la communauté</h2>
+                    <p className="text-white/80 mb-8">Suivez-nous pour être alerté des nouvelles arnaques détectées</p>
+                    <div className="flex justify-center space-x-4">
+                        <a href="#" className="px-6 py-3 bg-white text-primary font-semibold rounded-lg hover:bg-gray-100 transition">
+                            <i className="fab fa-twitter mr-2"></i>Twitter
+                        </a>
+                        <a href="#" className="px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition border border-white/30">
+                            <i className="fab fa-discord mr-2"></i>Discord
+                        </a>
+                        <a href="#" className="px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition border border-white/30">
+                            <i className="fab fa-youtube mr-2"></i>YouTube
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </>
+    );
+}
+
+function VendorCard({ vendor, rank }) {
+    const getBadgeStyle = (score) => {
+        if (score >= 95) return 'badge-honest';
+        if (score >= 85) return 'badge-reliable';
+        if (score >= 70) return 'badge-correct';
+        return 'badge-warning';
+    };
+
+    const getTrendIcon = (trend) => {
+        if (trend === 'up') return <i className="fas fa-arrow-up text-green-500"></i>;
+        if (trend === 'down') return <i className="fas fa-arrow-down text-red-500"></i>;
+        return <i className="fas fa-minus text-gray-400"></i>;
+    };
+
+    return (
+        <div className="bg-white rounded-xl shadow-md p-6 card-hover border border-gray-100">
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                    <div className="text-3xl">{vendor.logo}</div>
+                    <div>
+                        <div className="font-semibold text-gray-900">{vendor.name}</div>
+                        <div className="text-xs text-gray-500">{vendor.checks} vérifications</div>
+                    </div>
+                </div>
+                <div className="text-2xl font-bold text-gray-300">#{rank}</div>
+            </div>
+
+            <div className="flex items-center justify-between mb-3">
+                <div className="text-3xl font-bold text-gray-900">{vendor.score}%</div>
+                <span className={`px-3 py-1 rounded-full text-white text-xs font-semibold ${getBadgeStyle(vendor.score)}`}>
+                    {vendor.badge}
+                </span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Écart moyen: <strong className={vendor.avgDiff > 1 ? 'text-red-500' : 'text-green-500'}>+{vendor.avgDiff}€</strong></span>
+                <span>{getTrendIcon(vendor.trend)}</span>
+            </div>
+        </div>
+    );
+}
+
+function BadOfferCard({ offer }) {
+    const getTypeLabel = (type) => {
+        const types = {
+            'bait-switch': { label: 'Bait & Switch', color: 'bg-red-100 text-red-700' },
+            'hidden-fees': { label: 'Frais cachés', color: 'bg-orange-100 text-orange-700' },
+            'currency-trick': { label: 'Astuce devise', color: 'bg-yellow-100 text-yellow-700' },
+            'service-fee': { label: 'Frais de service', color: 'bg-purple-100 text-purple-700' },
+        };
+        return types[type] || { label: type, color: 'bg-gray-100 text-gray-700' };
+    };
+
+    const typeInfo = getTypeLabel(offer.type);
+
+    return (
+        <div className="bg-white rounded-xl shadow-md p-6 card-hover border-l-4 border-red-500">
+            <div className="flex items-start justify-between mb-3">
+                <span className={`px-2 py-1 rounded text-xs font-medium ${typeInfo.color}`}>
+                    {typeInfo.label}
+                </span>
+                <span className="text-xs text-gray-400">{offer.date}</span>
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-2">{offer.game}</h3>
+            <div className="text-sm text-gray-600 mb-3">sur <strong>{offer.vendor}</strong></div>
+            <div className="flex items-center justify-between bg-red-50 rounded-lg p-3">
+                <div className="text-center">
+                    <div className="text-xs text-gray-500">Affiché</div>
+                    <div className="font-semibold line-through text-gray-400">{offer.advertised}</div>
+                </div>
+                <i className="fas fa-arrow-right text-red-400"></i>
+                <div className="text-center">
+                    <div className="text-xs text-gray-500">Réel</div>
+                    <div className="font-bold text-red-600">{offer.actual}</div>
+                </div>
+                <div className="text-center">
+                    <div className="text-xs text-gray-500">Écart</div>
+                    <div className="font-bold text-red-600">{offer.diff}</div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function RankingsPage() {
+    return (
+        <section className="py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                        <i className="fas fa-trophy text-primary mr-3"></i>
+                        Classement des Revendeurs
+                    </h1>
+                    <p className="text-gray-600">Mis à jour le {stats.lastUpdate}</p>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <table className="w-full">
+                        <thead className="bg-gray-50 border-b">
+                            <tr>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Rang</th>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Vendeur</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">Score</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">Vérifications</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">Écart moyen</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">Badge</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">Tendance</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {vendorData.map((vendor, i) => (
+                                <tr key={vendor.id} className="hover:bg-gray-50 transition">
+                                    <td className="px-6 py-4">
+                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                            i === 0 ? 'bg-yellow-100 text-yellow-700' :
+                                            i === 1 ? 'bg-gray-100 text-gray-600' :
+                                            i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-50 text-gray-500'
+                                        }`}>
+                                            {i + 1}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center space-x-3">
+                                            <span className="text-2xl">{vendor.logo}</span>
+                                            <div>
+                                                <div className="font-semibold text-gray-900">{vendor.name}</div>
+                                                <div className="text-xs text-gray-500">Suivi depuis {vendor.since}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className={`text-2xl font-bold ${
+                                            vendor.score >= 90 ? 'text-green-600' :
+                                            vendor.score >= 70 ? 'text-yellow-600' : 'text-red-600'
+                                        }`}>{vendor.score}%</span>
+                                    </td>
+                                    <td className="px-6 py-4 text-center text-gray-600">{vendor.checks.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className={vendor.avgDiff > 1 ? 'text-red-600 font-semibold' : 'text-green-600'}>
+                                            +{vendor.avgDiff}€
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
+                                            vendor.score >= 95 ? 'badge-honest' :
+                                            vendor.score >= 85 ? 'badge-reliable' :
+                                            vendor.score >= 70 ? 'badge-correct' : 'badge-warning'
+                                        }`}>{vendor.badge}</span>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        {vendor.trend === 'up' && <i className="fas fa-arrow-up text-green-500"></i>}
+                                        {vendor.trend === 'down' && <i className="fas fa-arrow-down text-red-500"></i>}
+                                        {vendor.trend === 'stable' && <i className="fas fa-minus text-gray-400"></i>}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function BadOffersPage() {
+    return (
+        <section className="py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                        <i className="fas fa-exclamation-triangle text-danger mr-3"></i>
+                        Offres Trompeuses Exposées
+                    </h1>
+                    <p className="text-gray-600">{stats.badOffersExposed} cas documentés</p>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {badOffers.map(offer => (
+                        <BadOfferCard key={offer.id} offer={offer} />
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function BadCouponsPage() {
+    return (
+        <section className="py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                        <i className="fas fa-ticket text-warning mr-3"></i>
+                        Faux Coupons & Codes Trompeurs
+                    </h1>
+                    <p className="text-gray-600">{stats.badCouponsExposed} codes analysés</p>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <table className="w-full">
+                        <thead className="bg-gray-50 border-b">
+                            <tr>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Code</th>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Vendeur</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">Promesse</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">Réalité</th>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Applicable sur</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {badCoupons.map(coupon => (
+                                <tr key={coupon.id} className="hover:bg-red-50 transition">
+                                    <td className="px-6 py-4">
+                                        <code className="px-2 py-1 bg-gray-100 rounded font-mono text-sm">{coupon.code}</code>
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-gray-900">{coupon.vendor}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className="text-green-600 font-semibold">{coupon.promise}</span>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className="text-red-600 font-semibold">{coupon.reality}</span>
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-600">{coupon.game}</td>
+                                    <td className="px-6 py-4 text-center text-gray-500 text-sm">{coupon.date}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function AboutPage() {
+    return (
+        <section className="py-12">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-8">À propos de True Price Authority</h1>
+
+                <div className="prose prose-lg max-w-none">
+                    <div className="bg-primary/5 rounded-xl p-6 mb-8">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Notre mission</h2>
+                        <p className="text-gray-600">
+                            True Price Authority est né d'un constat simple : les comparateurs de prix de clés de jeux vidéo
+                            affichent souvent des prix qui ne correspondent pas à la réalité. Frais cachés, frais de service,
+                            conversions de devises abusives... Les joueurs se font régulièrement avoir.
+                        </p>
+                    </div>
+
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Ce que nous faisons</h2>
+                    <ul className="space-y-3 text-gray-600 mb-8">
+                        <li className="flex items-start">
+                            <i className="fas fa-check text-primary mt-1 mr-3"></i>
+                            <span>Vérification manuelle des prix réels au checkout</span>
+                        </li>
+                        <li className="flex items-start">
+                            <i className="fas fa-check text-primary mt-1 mr-3"></i>
+                            <span>Documentation des pratiques trompeuses</span>
+                        </li>
+                        <li className="flex items-start">
+                            <i className="fas fa-check text-primary mt-1 mr-3"></i>
+                            <span>Classement objectif des revendeurs par fiabilité</span>
+                        </li>
+                        <li className="flex items-start">
+                            <i className="fas fa-check text-primary mt-1 mr-3"></i>
+                            <span>Alerte de la communauté sur les arnaques détectées</span>
+                        </li>
+                    </ul>
+
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Indépendance</h2>
+                    <p className="text-gray-600 mb-8">
+                        True Price Authority n'est affilié à aucun revendeur. Nous n'acceptons aucune rémunération
+                        des sites que nous auditons. Notre seul objectif est de protéger les consommateurs.
+                    </p>
+
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact</h2>
+                    <p className="text-gray-600">
+                        Pour signaler une arnaque ou nous contacter, rejoignez notre Discord ou suivez-nous sur Twitter.
+                    </p>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function Footer() {
+    return (
+        <footer className="bg-secondary py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid md:grid-cols-4 gap-8 mb-8">
+                    <div>
+                        <div className="flex items-center space-x-2 mb-4">
+                            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold">T</span>
+                            </div>
+                            <span className="font-bold text-white">True Price Authority</span>
+                        </div>
+                        <p className="text-gray-400 text-sm">
+                            Le baromètre de confiance des revendeurs de clés de jeux vidéo.
+                        </p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-white mb-4">Navigation</h4>
+                        <ul className="space-y-2 text-gray-400 text-sm">
+                            <li><a href="#" className="hover:text-white transition">Accueil</a></li>
+                            <li><a href="#" className="hover:text-white transition">Classement</a></li>
+                            <li><a href="#" className="hover:text-white transition">Arnaques exposées</a></li>
+                            <li><a href="#" className="hover:text-white transition">Faux coupons</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-white mb-4">Ressources</h4>
+                        <ul className="space-y-2 text-gray-400 text-sm">
+                            <li><a href="#" className="hover:text-white transition">Méthodologie</a></li>
+                            <li><a href="#" className="hover:text-white transition">FAQ</a></li>
+                            <li><a href="#" className="hover:text-white transition">Signaler une arnaque</a></li>
+                            <li><a href="#" className="hover:text-white transition">API (bientôt)</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-white mb-4">Communauté</h4>
+                        <div className="flex space-x-4">
+                            <a href="#" className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition">
+                                <i className="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition">
+                                <i className="fab fa-discord"></i>
+                            </a>
+                            <a href="#" className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition">
+                                <i className="fab fa-youtube"></i>
+                            </a>
+                            <a href="#" className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition">
+                                <i className="fab fa-reddit"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div className="border-t border-gray-700 pt-8 text-center text-gray-500 text-sm">
+                    <p>© 2024-2026 True Price Authority. Projet indépendant - Non affilié aux revendeurs audités.</p>
+                    <p className="mt-2">Dernière mise à jour : {stats.lastUpdate}</p>
+                </div>
+            </div>
+        </footer>
+    );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
