@@ -49,6 +49,38 @@
     <script type="text/babel">
 const { useState, useEffect } = React;
 
+// ===== MODE DEMO (partagé avec CI) =====
+function isDemoMode() {
+    return localStorage.getItem('ci_demo_mode') === 'true';
+}
+
+// Données démo pour TPA
+const DEMO_OFFERS = [
+    { id: 'demo-1', name: 'GTA VI', source: 'CDKeys', displayed_price: 54.99, created_at: '2026-01-30T10:00:00Z' },
+    { id: 'demo-2', name: 'GTA VI', source: 'Instant Gaming', displayed_price: 52.99, created_at: '2026-01-30T10:00:00Z' },
+    { id: 'demo-3', name: 'GTA VI', source: 'G2A', displayed_price: 49.99, created_at: '2026-01-30T10:00:00Z' },
+    { id: 'demo-4', name: 'EA FC 25', source: 'Eneba', displayed_price: 44.99, created_at: '2026-01-29T10:00:00Z' },
+    { id: 'demo-5', name: 'EA FC 25', source: 'Kinguin', displayed_price: 42.50, created_at: '2026-01-29T10:00:00Z' },
+    { id: 'demo-6', name: 'Elden Ring', source: 'Fanatical', displayed_price: 34.99, created_at: '2026-01-28T10:00:00Z' },
+    { id: 'demo-7', name: 'Elden Ring', source: 'GG.deals', displayed_price: 32.99, created_at: '2026-01-28T10:00:00Z' },
+];
+
+const DEMO_CHECKS = [
+    { id: 'dc-1', offer_id: 'demo-1', checkout_price: 54.99, check_date: '2026-01-30T12:00:00Z', notes: 'Prix exact' },
+    { id: 'dc-2', offer_id: 'demo-2', checkout_price: 55.49, check_date: '2026-01-30T12:00:00Z', notes: '+2.50€ frais cachés' },
+    { id: 'dc-3', offer_id: 'demo-3', checkout_price: 56.99, check_date: '2026-01-30T12:00:00Z', notes: '+7€ fees' },
+    { id: 'dc-4', offer_id: 'demo-4', checkout_price: 44.99, check_date: '2026-01-29T12:00:00Z', notes: 'Prix correct' },
+    { id: 'dc-5', offer_id: 'demo-5', checkout_price: 47.80, check_date: '2026-01-29T12:00:00Z', notes: '+5.30€ premium' },
+    { id: 'dc-6', offer_id: 'demo-6', checkout_price: 34.99, check_date: '2026-01-28T12:00:00Z', notes: 'Honnête' },
+    { id: 'dc-7', offer_id: 'demo-7', checkout_price: 32.99, check_date: '2026-01-28T12:00:00Z', notes: 'Prix vérifié' },
+];
+
+const DEMO_COUPONS = [
+    { id: 'coupon-1', code: 'DEMO10', source: 'G2A', discount: '10%', is_fake: false, tested_at: '2026-01-30T10:00:00Z' },
+    { id: 'coupon-2', code: 'SAVE20', source: 'Kinguin', discount: '20%', is_fake: true, tested_at: '2026-01-29T10:00:00Z' },
+    { id: 'coupon-3', code: 'WINTER5', source: 'CDKeys', discount: '5%', is_fake: false, tested_at: '2026-01-28T10:00:00Z' },
+];
+
 // ===== CONFIG SUPABASE =====
 const SUPABASE_URL = 'https://ngzvurmhqnanoghjyswh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nenZ1cm1ocW5hbm9naGp5c3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1OTc2MTIsImV4cCI6MjA4NDE3MzYxMn0.Sk9M-tUkZY5p0OPw7xT0UOaIgOR3SQRACSVyi_TL61Q';
@@ -68,9 +100,19 @@ function App() {
     const [rawChecks, setRawChecks] = useState([]);
     const [rawCoupons, setRawCoupons] = useState([]);
 
-    // Charger les données depuis Supabase
+    // Charger les données depuis Supabase ou mode démo
     useEffect(() => {
         const loadData = async () => {
+            // Mode démo : utiliser les données de test
+            if (isDemoMode()) {
+                setRawOffers(DEMO_OFFERS);
+                setRawChecks(DEMO_CHECKS);
+                setRawCoupons(DEMO_COUPONS);
+                setLoading(false);
+                return;
+            }
+
+            // Mode réel : charger depuis Supabase
             try {
                 const [offersRes, checksRes, couponsRes] = await Promise.all([
                     fetch(`${SUPABASE_URL}/rest/v1/offers?select=*`, {
@@ -288,6 +330,11 @@ function Navbar({ currentPage, setCurrentPage }) {
                     </div>
 
                     <div className="flex items-center space-x-3">
+                        {isDemoMode() && (
+                            <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-semibold">
+                                <i className="fas fa-flask mr-1"></i>MODE DÉMO
+                            </span>
+                        )}
                         <a href="#" className="text-gray-400 hover:text-gray-600 transition"><i className="fab fa-twitter text-lg"></i></a>
                         <a href="#" className="text-gray-400 hover:text-gray-600 transition"><i className="fab fa-discord text-lg"></i></a>
                         <a href="#" className="text-gray-400 hover:text-gray-600 transition"><i className="fab fa-youtube text-lg"></i></a>
