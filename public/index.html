@@ -196,18 +196,6 @@ function App() {
     const merchantData = sourceStats.filter(s => s.type === 'merchant');
     const badOffers = generateBadOffers();
 
-    // Stats globales calculées
-    const stats = {
-        totalChecks: rawChecks.length,
-        vendorsAudited: sourceStats.length,
-        comparatorsAudited: comparatorData.length,
-        avgLieRate: sourceStats.length > 0 ? (sourceStats.reduce((sum, s) => sum + (100 - s.score), 0) / sourceStats.length).toFixed(1) : 0,
-        badOffersExposed: badOffers.length,
-        badCouponsExposed: badCoupons.length,
-        lastUpdate: new Date().toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        startedSince: 'Novembre 2024'
-    };
-
     // Générer les "mauvais coupons" depuis les données Supabase
     const badCoupons = rawCoupons.filter(c => c.is_fake).map(c => ({
         id: c.id,
@@ -220,6 +208,18 @@ function App() {
         source_url: c.source_url,
         notes: c.notes
     }));
+
+    // Stats globales calculées
+    const stats = {
+        totalChecks: rawChecks.length,
+        vendorsAudited: sourceStats.length,
+        comparatorsAudited: comparatorData.length,
+        avgLieRate: sourceStats.length > 0 ? (sourceStats.reduce((sum, s) => sum + (100 - s.score), 0) / sourceStats.length).toFixed(1) : 0,
+        badOffersExposed: badOffers.length,
+        badCouponsExposed: badCoupons.length,
+        lastUpdate: new Date().toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        startedSince: 'Novembre 2024'
+    };
 
     if (loading) {
         return (
