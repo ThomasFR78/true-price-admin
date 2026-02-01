@@ -92,6 +92,89 @@ const SOURCE_LOGOS = {
     'Gamivo': '🎪', 'HRK': '🎮', 'Green Man Gaming': '🟩', 'Humble': '📦', 'GOG': '🎁'
 };
 
+// ===== TRADUCTIONS FR/EN =====
+const TRANSLATIONS = {
+    fr: {
+        // Navigation
+        home: 'Accueil', rankings: 'Classement', scams: 'Arnaques', fakeCoupons: 'Faux Coupons', about: 'À propos',
+        // Hero
+        heroTagline: 'Vérification des prix depuis',
+        heroTitle1: 'Arrêtez de vous faire avoir sur les',
+        heroTitle2: 'prix des clés de jeux',
+        heroDesc: 'True Price Authority vérifie les prix réels des revendeurs de clés. Nous exposons les frais cachés, les faux coupons et les pratiques trompeuses.',
+        viewRankings: 'Voir le classement', exposedOffers: 'Offres exposées',
+        // Lie Barometer
+        lieBarometer: 'Baromètre du Mensonge', lieDesc: 'Taux moyen d\'écart prix affiché vs réel', lying: 'de mensonge',
+        honest: 'Honnête', deceiving: 'Trompeur',
+        // Stats
+        pricesVerified: 'Prix vérifiés', vendorsAudited: 'Vendeurs audités', scamsExposed: 'Arnaques exposées',
+        fakeCouponsCount: 'Faux coupons', avgReliability: 'Taux de fiabilité moyen',
+        // Rankings
+        trustRanking: 'Classement de Confiance', basedOn: 'Basé sur', priceChecks: 'vérifications de prix',
+        compareDesc: 'Nous comparons le prix affiché sur les comparateurs avec le prix réel au checkout.',
+        viewFullRanking: 'Voir le classement complet', avgDiff: 'Écart moyen', checks: 'vérifs',
+        // Scams
+        recentScams: 'Dernières Arnaques Exposées', scamsDesc: 'Prix trompeurs détectés ces derniers jours',
+        viewAllScams: 'Voir toutes les arnaques', hiddenFees: 'Frais cachés', realPrice: 'Prix réel',
+        // How it works
+        howItWorks: 'Comment ça marche ?', methodology: 'Notre méthodologie de vérification',
+        step1: 'Collecte', step1Desc: 'Nous relevons les prix affichés sur Allkeyshop et GG.deals',
+        step2: 'Vérification', step2Desc: 'Nous allons jusqu\'au checkout sur chaque marchand',
+        step3: 'Comparaison', step3Desc: 'Nous calculons l\'écart entre prix affiché et prix réel',
+        step4: 'Publication', step4Desc: 'Nous publions les résultats et alertons la communauté',
+        // Badges
+        reference: 'RÉFÉRENCE', veryReliable: 'TRÈS FIABLE', reliable: 'FIABLE', variable: 'VARIABLE', caution: 'ATTENTION', risky: 'RISQUÉ',
+        // Footer
+        footerDesc: 'Le baromètre de confiance des revendeurs de clés de jeux. Nous vérifions les prix réels pour vous protéger.',
+        notAffiliated: 'Non affilié aux revendeurs audités.', lastUpdate: 'Dernière mise à jour',
+        // Misc
+        demoMode: 'MODE DÉMO', comparators: 'Comparateurs', merchants: 'Marchands'
+    },
+    en: {
+        // Navigation
+        home: 'Home', rankings: 'Rankings', scams: 'Scams', fakeCoupons: 'Fake Coupons', about: 'About',
+        // Hero
+        heroTagline: 'Price verification since',
+        heroTitle1: 'Stop getting ripped off on',
+        heroTitle2: 'game key prices',
+        heroDesc: 'True Price Authority verifies real prices from key resellers. We expose hidden fees, fake coupons and deceptive practices.',
+        viewRankings: 'View rankings', exposedOffers: 'Exposed offers',
+        // Lie Barometer
+        lieBarometer: 'Lie Barometer', lieDesc: 'Average gap between displayed and real price', lying: 'of lies',
+        honest: 'Honest', deceiving: 'Deceiving',
+        // Stats
+        pricesVerified: 'Prices verified', vendorsAudited: 'Vendors audited', scamsExposed: 'Scams exposed',
+        fakeCouponsCount: 'Fake coupons', avgReliability: 'Average reliability rate',
+        // Rankings
+        trustRanking: 'Trust Ranking', basedOn: 'Based on', priceChecks: 'price checks',
+        compareDesc: 'We compare the displayed price on comparators with the real checkout price.',
+        viewFullRanking: 'View full ranking', avgDiff: 'Avg. difference', checks: 'checks',
+        // Scams
+        recentScams: 'Recent Scams Exposed', scamsDesc: 'Deceptive prices detected recently',
+        viewAllScams: 'View all scams', hiddenFees: 'Hidden fees', realPrice: 'Real price',
+        // How it works
+        howItWorks: 'How it works?', methodology: 'Our verification methodology',
+        step1: 'Collection', step1Desc: 'We collect displayed prices from Allkeyshop and GG.deals',
+        step2: 'Verification', step2Desc: 'We go to checkout on each merchant',
+        step3: 'Comparison', step3Desc: 'We calculate the gap between displayed and real price',
+        step4: 'Publication', step4Desc: 'We publish results and alert the community',
+        // Badges
+        reference: 'REFERENCE', veryReliable: 'VERY RELIABLE', reliable: 'RELIABLE', variable: 'VARIABLE', caution: 'CAUTION', risky: 'RISKY',
+        // Footer
+        footerDesc: 'The trust barometer for game key resellers. We verify real prices to protect you.',
+        notAffiliated: 'Not affiliated with audited resellers.', lastUpdate: 'Last update',
+        // Misc
+        demoMode: 'DEMO MODE', comparators: 'Comparators', merchants: 'Merchants'
+    }
+};
+
+// Contexte de langue global
+const LangContext = React.createContext({ lang: 'fr', setLang: () => {}, t: (key) => key });
+
+function useLang() {
+    return React.useContext(LangContext);
+}
+
 // ===== COMPOSANTS =====
 function App() {
     const [currentPage, setCurrentPage] = useState('home');
@@ -99,6 +182,13 @@ function App() {
     const [rawOffers, setRawOffers] = useState([]);
     const [rawChecks, setRawChecks] = useState([]);
     const [rawCoupons, setRawCoupons] = useState([]);
+    const [lang, setLang] = useState(() => localStorage.getItem('tpa_lang') || 'fr');
+
+    // Fonction de traduction
+    const t = (key) => TRANSLATIONS[lang]?.[key] || TRANSLATIONS['fr'][key] || key;
+
+    // Sauvegarder la langue
+    useEffect(() => { localStorage.setItem('tpa_lang', lang); }, [lang]);
 
     // Charger les données depuis Supabase ou mode démo
     useEffect(() => {
@@ -263,6 +353,127 @@ function App() {
         startedSince: 'Novembre 2024'
     };
 
+    // Fonction pour générer le rapport de précision des comparateurs
+    const generateReport = () => {
+        const reportDate = new Date().toLocaleString('fr-FR', {
+            day: 'numeric', month: 'long', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+
+        // Générer le HTML du rapport
+        const reportHTML = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport TPA - Précision des Comparateurs - ${reportDate}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+        <div class="flex items-center justify-between mb-8 pb-6 border-b">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">📊 Rapport de Précision</h1>
+                <p class="text-gray-500 mt-1">True Price Authority - Analyse des Comparateurs</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Généré le</p>
+                <p class="font-semibold">${reportDate}</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6 mb-8">
+            <div class="bg-emerald-50 rounded-xl p-4 text-center">
+                <p class="text-3xl font-bold text-emerald-600">${stats.totalChecks}</p>
+                <p class="text-sm text-gray-600">Prix vérifiés</p>
+            </div>
+            <div class="bg-blue-50 rounded-xl p-4 text-center">
+                <p class="text-3xl font-bold text-blue-600">${comparatorData.length}</p>
+                <p class="text-sm text-gray-600">Comparateurs analysés</p>
+            </div>
+            <div class="bg-amber-50 rounded-xl p-4 text-center">
+                <p class="text-3xl font-bold text-amber-600">${stats.avgLieRate}%</p>
+                <p class="text-sm text-gray-600">Écart moyen</p>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold mb-4">🎯 Classement des Comparateurs par Précision</h2>
+        <p class="text-gray-600 mb-6">Comparaison des prix affichés (SANS coupon) vs prix réels au checkout</p>
+
+        <table class="w-full mb-8">
+            <thead>
+                <tr class="border-b-2 border-gray-200">
+                    <th class="text-left py-3 px-4">#</th>
+                    <th class="text-left py-3 px-4">Comparateur</th>
+                    <th class="text-center py-3 px-4">Score</th>
+                    <th class="text-center py-3 px-4">Vérifications</th>
+                    <th class="text-center py-3 px-4">Écart moyen</th>
+                    <th class="text-center py-3 px-4">Badge</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${comparatorData.map((c, i) => \`
+                <tr class="border-b border-gray-100 \${i % 2 === 0 ? 'bg-gray-50' : ''}">
+                    <td class="py-3 px-4 font-bold text-gray-400">\${i + 1}</td>
+                    <td class="py-3 px-4 font-semibold">\${c.logo} \${c.name}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="inline-flex items-center justify-center w-12 h-12 rounded-full \${c.score >= 95 ? 'bg-emerald-100 text-emerald-700' : c.score >= 80 ? 'bg-blue-100 text-blue-700' : c.score >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'} font-bold">
+                            \${c.score}%
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-center">\${c.checks}</td>
+                    <td class="py-3 px-4 text-center \${c.avgDiff > 0 ? 'text-red-600' : 'text-emerald-600'}">\${c.avgDiff > 0 ? '+' : ''}\${c.avgDiff.toFixed(2)}€</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold \${c.score >= 95 ? 'bg-emerald-100 text-emerald-700' : c.score >= 80 ? 'bg-blue-100 text-blue-700' : c.score >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}">
+                            \${c.badge}
+                        </span>
+                    </td>
+                </tr>
+                \`).join('')}
+            </tbody>
+        </table>
+
+        <h2 class="text-xl font-bold mb-4">📈 Méthodologie</h2>
+        <div class="bg-gray-50 rounded-xl p-6 mb-8">
+            <ul class="space-y-2 text-gray-600">
+                <li>✅ Prix relevés <strong>SANS coupon</strong> pour mesurer la précision réelle</li>
+                <li>✅ Comparaison avec le prix final au checkout (frais inclus)</li>
+                <li>✅ Score = 100 - (écart moyen × 2)</li>
+                <li>✅ Les coupons sont trackés séparément pour comparaison</li>
+            </ul>
+        </div>
+
+        <div class="text-center text-gray-400 text-sm mt-8 pt-6 border-t">
+            <p>Rapport généré par True Price Authority</p>
+            <p class="mt-1">🔗 <a href="https://true-price-authority.vercel.app" class="text-emerald-600 hover:underline">true-price-authority.vercel.app</a></p>
+        </div>
+    </div>
+
+    <div class="text-center mt-6 no-print">
+        <button onclick="window.print()" class="px-6 py-3 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition">
+            🖨️ Imprimer / Sauvegarder en PDF
+        </button>
+    </div>
+</body>
+</html>`;
+
+        // Créer et télécharger le fichier
+        const blob = new Blob([reportHTML], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = \`TPA_Rapport_\${new Date().toISOString().split('T')[0]}.html\`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -277,21 +488,24 @@ function App() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
-            <main>
-                {currentPage === 'home' && <HomePage setCurrentPage={setCurrentPage} vendorData={vendorData} badOffers={badOffers} stats={stats} />}
-                {currentPage === 'rankings' && <RankingsPage vendorData={vendorData} comparatorData={comparatorData} stats={stats} />}
-                {currentPage === 'bad-offers' && <BadOffersPage badOffers={badOffers} stats={stats} />}
-                {currentPage === 'bad-coupons' && <BadCouponsPage badCoupons={badCoupons} stats={stats} />}
-                {currentPage === 'about' && <AboutPage stats={stats} />}
-            </main>
-            <Footer stats={stats} />
-        </div>
+        <LangContext.Provider value={{ lang, setLang, t }}>
+            <div className="min-h-screen bg-gray-50">
+                <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                <main>
+                    {currentPage === 'home' && <HomePage setCurrentPage={setCurrentPage} vendorData={vendorData} badOffers={badOffers} stats={stats} />}
+                    {currentPage === 'rankings' && <RankingsPage vendorData={vendorData} comparatorData={comparatorData} stats={stats} />}
+                    {currentPage === 'bad-offers' && <BadOffersPage badOffers={badOffers} stats={stats} />}
+                    {currentPage === 'bad-coupons' && <BadCouponsPage badCoupons={badCoupons} stats={stats} />}
+                    {currentPage === 'about' && <AboutPage stats={stats} />}
+                </main>
+                <Footer stats={stats} />
+            </div>
+        </LangContext.Provider>
     );
 }
 
 function Navbar({ currentPage, setCurrentPage }) {
+    const { lang, setLang, t } = useLang();
     return (
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -308,11 +522,11 @@ function Navbar({ currentPage, setCurrentPage }) {
 
                     <div className="hidden md:flex items-center space-x-1">
                         {[
-                            { id: 'home', label: 'Accueil', icon: 'fa-home' },
-                            { id: 'rankings', label: 'Classement', icon: 'fa-trophy' },
-                            { id: 'bad-offers', label: 'Arnaques', icon: 'fa-exclamation-triangle' },
-                            { id: 'bad-coupons', label: 'Faux Coupons', icon: 'fa-ticket' },
-                            { id: 'about', label: 'À propos', icon: 'fa-info-circle' },
+                            { id: 'home', labelKey: 'home', icon: 'fa-home' },
+                            { id: 'rankings', labelKey: 'rankings', icon: 'fa-trophy' },
+                            { id: 'bad-offers', labelKey: 'scams', icon: 'fa-exclamation-triangle' },
+                            { id: 'bad-coupons', labelKey: 'fakeCoupons', icon: 'fa-ticket' },
+                            { id: 'about', labelKey: 'about', icon: 'fa-info-circle' },
                         ].map(item => (
                             <button
                                 key={item.id}
@@ -324,15 +538,24 @@ function Navbar({ currentPage, setCurrentPage }) {
                                 }`}
                             >
                                 <i className={`fas ${item.icon} mr-2`}></i>
-                                {item.label}
+                                {t(item.labelKey)}
                             </button>
                         ))}
                     </div>
 
                     <div className="flex items-center space-x-3">
+                        {/* Language Switcher */}
+                        <select
+                            value={lang}
+                            onChange={(e) => setLang(e.target.value)}
+                            className="bg-gray-100 border-0 rounded-lg px-2 py-1 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-200 transition"
+                        >
+                            <option value="fr">🇫🇷 FR</option>
+                            <option value="en">🇬🇧 EN</option>
+                        </select>
                         {isDemoMode() && (
                             <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-semibold">
-                                <i className="fas fa-flask mr-1"></i>MODE DÉMO
+                                <i className="fas fa-flask mr-1"></i>{t('demoMode')}
                             </span>
                         )}
                         <a href="#" className="text-gray-400 hover:text-gray-600 transition"><i className="fab fa-twitter text-lg"></i></a>
@@ -346,6 +569,7 @@ function Navbar({ currentPage, setCurrentPage }) {
 }
 
 function HomePage({ setCurrentPage, vendorData, badOffers, stats }) {
+    const { t } = useLang();
     return (
         <>
             {/* Hero Section */}
@@ -355,24 +579,23 @@ function HomePage({ setCurrentPage, vendorData, badOffers, stats }) {
                         <div>
                             <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
                                 <i className="fas fa-shield-alt mr-2"></i>
-                                Indépendant depuis {stats.startedSince}
+                                {t('heroTagline')} {stats.startedSince}
                             </div>
                             <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
-                                Arrêtez de vous faire avoir sur les
-                                <span className="text-primary"> prix des clés de jeux</span>
+                                {t('heroTitle1')}
+                                <span className="text-primary"> {t('heroTitle2')}</span>
                             </h1>
                             <p className="text-xl text-gray-600 mb-8">
-                                True Price Authority vérifie les prix réels des revendeurs de clés.
-                                Nous exposons les frais cachés, les faux coupons et les pratiques trompeuses.
+                                {t('heroDesc')}
                             </p>
                             <div className="flex flex-wrap gap-4">
                                 <button onClick={() => setCurrentPage('rankings')} className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition shadow-lg shadow-primary/30">
                                     <i className="fas fa-trophy mr-2"></i>
-                                    Voir le classement
+                                    {t('viewRankings')}
                                 </button>
                                 <button onClick={() => setCurrentPage('bad-offers')} className="px-6 py-3 bg-white text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition border border-gray-200">
                                     <i className="fas fa-search mr-2"></i>
-                                    Offres exposées
+                                    {t('exposedOffers')}
                                 </button>
                             </div>
                         </div>
@@ -381,21 +604,21 @@ function HomePage({ setCurrentPage, vendorData, badOffers, stats }) {
                             {/* Lie Barometer */}
                             <div className="bg-white rounded-2xl shadow-xl p-8 card-hover">
                                 <div className="text-center mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Baromètre du Mensonge</h3>
-                                    <p className="text-sm text-gray-500">Taux moyen d'écart prix affiché vs réel</p>
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2">{t('lieBarometer')}</h3>
+                                    <p className="text-sm text-gray-500">{t('lieDesc')}</p>
                                 </div>
                                 <div className="relative w-48 h-48 mx-auto mb-6">
                                     <div className="trust-ring w-full h-full p-4" style={{'--percent': `${100-stats.avgLieRate}%`}}>
                                         <div className="w-full h-full bg-white rounded-full flex items-center justify-center flex-col">
                                             <span className="text-4xl font-bold text-danger">{stats.avgLieRate}%</span>
-                                            <span className="text-sm text-gray-500">de mensonge</span>
+                                            <span className="text-sm text-gray-500">{t('lying')}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="h-3 lie-meter rounded-full mb-4"></div>
                                 <div className="flex justify-between text-xs text-gray-500">
-                                    <span>Honnête</span>
-                                    <span>Trompeur</span>
+                                    <span>{t('honest')}</span>
+                                    <span>{t('deceiving')}</span>
                                 </div>
                             </div>
                         </div>
@@ -408,16 +631,16 @@ function HomePage({ setCurrentPage, vendorData, badOffers, stats }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-8 text-center">
                         {[
-                            { value: stats.totalChecks.toLocaleString(), label: 'Prix vérifiés', icon: 'fa-check-circle' },
-                            { value: stats.vendorsAudited, label: 'Vendeurs audités', icon: 'fa-store' },
-                            { value: stats.badOffersExposed, label: 'Arnaques exposées', icon: 'fa-exclamation-triangle' },
-                            { value: stats.badCouponsExposed, label: 'Faux coupons', icon: 'fa-ticket' },
-                            { value: '73.1%', label: 'Taux de fiabilité moyen', icon: 'fa-chart-line' },
+                            { value: stats.totalChecks.toLocaleString(), labelKey: 'pricesVerified', icon: 'fa-check-circle' },
+                            { value: stats.vendorsAudited, labelKey: 'vendorsAudited', icon: 'fa-store' },
+                            { value: stats.badOffersExposed, labelKey: 'scamsExposed', icon: 'fa-exclamation-triangle' },
+                            { value: stats.badCouponsExposed, labelKey: 'fakeCouponsCount', icon: 'fa-ticket' },
+                            { value: '73.1%', labelKey: 'avgReliability', icon: 'fa-chart-line' },
                         ].map((stat, i) => (
                             <div key={i}>
                                 <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
                                 <div className="text-gray-400 text-sm">
-                                    <i className={`fas ${stat.icon} mr-1`}></i>{stat.label}
+                                    <i className={`fas ${stat.icon} mr-1`}></i>{t(stat.labelKey)}
                                 </div>
                             </div>
                         ))}
@@ -944,7 +1167,7 @@ function Footer({ stats }) {
                     </div>
                 </div>
                 <div className="border-t border-gray-700 pt-8 text-center text-gray-500 text-sm">
-                    <p>© 2024-2026 True Price Authority. Projet indépendant - Non affilié aux revendeurs audités.</p>
+                    <p>© 2024-2026 True Price Authority. Non affilié aux revendeurs audités.</p>
                     <p className="mt-2">Dernière mise à jour : {stats.lastUpdate}</p>
                 </div>
             </div>
