@@ -138,11 +138,11 @@ function App() {
         loadData();
     }, []);
 
-    // Calculer les données dérivées
+    // Calculer les données dérivées (Number() pour éviter mismatch string/number)
     const offersWithChecks = rawOffers.map(offer => ({
         ...offer,
-        checks: rawChecks.filter(c => c.offer_id === offer.id),
-        lastCheck: rawChecks.find(c => c.offer_id === offer.id)
+        checks: rawChecks.filter(c => Number(c.offer_id) === Number(offer.id)),
+        lastCheck: rawChecks.find(c => Number(c.offer_id) === Number(offer.id))
     }));
 
     // Calculer les scores par source (marchand ET comparateur)
